@@ -1,0 +1,49 @@
+.titles{
+  font-size: 17px;
+}
+.personphoto{
+  width:60px;
+  height:60px;
+  border-radius: 50%;
+}
+.read>*,
+.desc > *{
+  border-right:1px solid rgb(200, 197, 197); 
+
+}
+.read>*:last-child,
+.desc>*:last-child{
+  border:none;
+}
+
+.sider-photo {
+  width: 265px;
+  height: 260px;
+
+  position: relative;
+  border-radius: 3px;
+}
+.sider-photo,
+.demo-avatar {
+  background: #fff;
+  margin-bottom: 5px;
+}
+.demo-avatar {
+  padding: 10px;
+}
+img {
+  width: 265px;
+  height: 150px;
+  border-radius: 3px;
+}
+.miniphoto {
+  width: 80px;
+  height: 80px;
+  position: absolute;
+  top: 90px;
+  right: 100px;
+  border-radius: 50%;
+}
+.title {
+  margin-top: 30px;
+}

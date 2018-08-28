@@ -1,0 +1,22 @@
+body {
+  background: rgb(238, 238, 238);
+}
+
+.container {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.center{
+  text-align: center;
+}
+.right{
+  text-align: right;
+}
+.left{
+  text-align: left;
+}
+.card{
+  margin-top:15px;
+  
+}
