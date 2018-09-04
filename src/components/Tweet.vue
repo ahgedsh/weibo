@@ -5,45 +5,57 @@
         <Col span='3'>
         <img class='personphoto' src="../assets/img/link.jpg" alt="">
         </Col>
-        <Col span='20'>
+        <Col span='21'>
         <div class="titles">
-          {{ row.$user.username || row.$user.phone}}
+          {{row.$user ? row.$user.username || row.$user.phone : '-' }}
         </div>
-        <div style='font-size:12px'>今天00：01 来自 微博 weibo.com</div>
-        <div>{{row.content}} 
-          {{row.tweet_form }}
-           <span style='color:red;' v-if='row.tweet_form'>
-          {{row.oldvalue}}
-          </span> 
+        <div style='font-size:12px'>今天{{row.timer}} 来自 微博 weibo.com</div>
+        <div style='padding:5px 0' >
+          {{row.content}}         
         </div>
-        <div >
-         
-           <img style='margin:20px 0;' :src='(row.picture&&row.picture!=null) ? row.picture : "http://wx2.sinaimg.cn/mw690/006qLr31ly1fu4r2p8kfvj31hc0u0n4n.jpg"' > 
+        <div>
+          <span v-if='row.picture'>
+          <img style='margin-bottom:10px; max-width:266px' :src='row.picture'>
+          </span>
+          <span v-else style='display:none'></span>
         </div>
         </Col>
+       
+       
+        
+        
 
       </Row>
+        <div v-if='hasOldvalue(row.tweet_form)' class='transpond'>
+            <div  style='padding:5px 0;'>
+              {{oldvalue ? oldvalue : ''}}
+            </div>
+            <span v-if="oldpicture">
+              <img style='margin-bottom:10px;max-width:266px' :src='oldpicture ? oldpicture : ""'>
+            </span>
+            <span v-else  style='display:none'></span>
+        </div>
       <Row class='center read'>
         <Col span='6'>
         <Icon type="ios-star-outline" />
         <span v-if='collect_visible' @click='collect_visible=false'>已收藏</span>
         <span v-else @click='collect_visible=true'>
 
-        收藏
+          收藏
         </span>
 
         </Col>
         <Col span='6'>
         <Icon size='20' type="ios-send-outline" />
-        <span @click='openSendModal($event,row)' >
+        <span @click='openSendModal($event,row)'>
           转发
 
         </span>
         </Col>
         <Col span='6'>
-        <Icon type="ios-heart-outline" /> 
-        <span v-if='visible' @click='visible=false'>已赞</span> 
-        <span v-else @click='visible=true'>  赞</span>
+        <Icon type="ios-heart-outline" />
+        <span v-if='visible' @click='visible=false'>已赞</span>
+        <span v-else @click='visible=true'> 赞</span>
         </Col>
         <Col span='6'>
         <span @click='show_comment(row.id)'>
@@ -101,7 +113,7 @@
                   </span>: {{it.content}}
 
                 </div>
-                <div style='font-size:3px' >
+                <div style='font-size:3px'>
                   12分钟前
                 </div>
 
@@ -137,16 +149,17 @@
 
     </Card>
     <Modal @on-ok='submit_transmit(currentModal.id)' v-model="modalVisible" title='转发微博'>
-       <p>@{{currentModal.$user ?currentModal.$user.username:'-'}}
-         {{currentModal.content}}
-       
-       
-         <!-- {{tweet_list.$user ? tweet_list.$user.username :'-'}}{{tweet_list.content}} -->
-         <Input v-model='otherform.content' type="textarea" placeholder="Enter something..."></Input>
-        
-    </p>
-  
-    
+      <span style='font-weight:bold;margin-left:10px;'>@{{currentModal.$user ?currentModal.$user.username:'-'}}</span>
+      <span>
+
+        {{currentModal.content}}
+
+      </span>
+
+      <!-- {{tweet_list.$user ? tweet_list.$user.username :'-'}}{{tweet_list.content}} -->
+      <Input v-model='otherform.content' type="textarea" placeholder="Enter something..."></Input>
+
+      </p>
 
     </Modal>
 
@@ -170,59 +183,70 @@ export default {
     return {
       his: {},
       form: {},
-      otherform:{},
-      content:{},
-      transpond_list:[],
-      visible:false,
-      collect_visible:false,
-      
+      otherform: {},
+      content: {},
+      transpond_list: [],
+      visible: false,
+      collect_visible: false,
+
       comment_visible: false,
       comment_list: [],
-      tweet_list:[],
-      currentModal:{
-        oldvalue:'',
+      tweet_list: [],
+      currentModal: {
+        oldvalue: ""
       },
-      modalVisible:false,
-      timeline:[],
+      oldpicture: "",
+      oldvalue: "",
+      modalVisible: false,
+      timeline: []
     };
   },
   mounted() {
     this.his = session.uinfo();
     this.init_form();
-   
-   
   },
   methods: {
-    
-    openSendModal(e,row){
-      this.modalVisible=true;
-     this.currentModal = row
-     if(row.tweet_form){
-       api('tweet/find',{id:tweet_form})
-       .then(r=>{
-         this.currentModal.oldvalue=r.data.content;
-         console.log(r.data)
-       })
-     }
+    hasOldvalue(id) {
+      if (id) {
+        api("tweet/find", { id: id }).then(r => {
+          this.oldvalue = r.data.content;
+          this.oldpicture = r.data.picture;
+        });
+
+        return true;
+      } else {
+        return false;
+      }
     },
-    read_tweet(id){
-      api('tweet/find',{id,with:{relation:'has_one',model:'user'}})
-      .then(r=>{
-        this.tweet_list=r.data;
+
+    openSendModal(e, row) {
+      this.modalVisible = true;
+      this.currentModal = row;
+      if (row.tweet_form) {
+        api("tweet/find", { id: row.tweet_form }).then(r => {
+          this.currentModal.oldvalue = r.data.content;
+          console.log(r.data);
+        });
+      }
+    },
+    read_tweet(id) {
+      api("tweet/find", {
+        id,
+        with: { relation: "has_one", model: "user" }
+      }).then(r => {
+        this.tweet_list = r.data;
         console.log(r.data);
-      })
+      });
     },
-    submit_transmit(id){
-      this.otherform.tweet_form=id;
-      console.log(this.otherform.tweet_form)
-      this.otherform.user_id= this.his.id;
-      console.log(this.otherform.user_id)
-      
-      api('tweet/create',this.otherform)
-      .then(r=>{
-      
-        this.read_timeline(); 
-      })
+    submit_transmit(id) {
+      this.otherform.tweet_form = id;
+      console.log(this.otherform.tweet_form);
+      this.otherform.user_id = this.his.id;
+      console.log(this.otherform.user_id);
+
+      api("tweet/create", this.otherform).then(r => {
+        this.read_timeline();
+      });
     },
     read_timeline() {
       api("tweet/read", {
@@ -248,7 +272,7 @@ export default {
 
       return result;
     },
-    
+
     remove(id, tweet_id) {
       api("comment/delete", { id }).then(r => {
         console.log(r.data);
@@ -259,6 +283,7 @@ export default {
       this.form.tweet_id = tweet_id;
       // console.log(this.form.tweet_id)
       this.form.user_id = this.his.id;
+
       //  console.log(this.his.id)
       api("comment/create", this.form).then(r => {
         //console.log(r.data);
@@ -293,13 +318,19 @@ export default {
 </script>
 
 <style scoped>
-.avatar{
-  margin-left:25px;
-  margin-right:15px;
+.transpond{
+ padding-top:-10px;
+  margin-bottom:10px;
+   background:#eee;
+   padding-left:66px;
+}
+.avatar {
+  margin-left: 25px;
+  margin-right: 15px;
 }
 .comment {
   padding: 5px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  /* border-bottom: 1px solid rgba(0, 0, 0, 0.05); */
 }
 .button {
   border: none;

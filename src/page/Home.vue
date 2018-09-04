@@ -4,39 +4,7 @@
     <div class='container'>
       <Row :gutter='16'>
         <Col span='6'>
-        <!-- <div class='sider-photo'>
-          <img src="../assets/img/picture1.jpg" alt="">
-          <img class='miniphoto' src="../assets/img/link.jpg" alt="">
-          <div class='title center'>
-            <h3> {{his.username}}</h3>
-          </div>
-          <Row class='center '>
-            <div class='desc'>
-
-              <Col span='8'>
-              <div>
-                <h2>{{followed_list.length}}</h2>
-              </div>
-              <div>关注</div>
-
-              </Col>
-              <Col span='8'>
-              <div>
-                <h2>{{fans_list.length}}</h2>
-              </div>
-              <div>粉丝</div>
-
-              </Col>
-              <Col span='8'>
-              <div>
-                <h2>{{content.length}}</h2>
-              </div>
-              <div>微博</div>
-              </Col>
-            </div>
-          </Row>
-
-        </div> -->
+        
         <span>
 
           <Profilecard style='width:265px;' />
@@ -80,7 +48,6 @@
           </Row>
 
         </div>
-
         <Tweet :row='it' v-for='it in timeline' />
 
         </Col>
@@ -125,6 +92,10 @@
         </Col>
       </Row>
     </div>
+  
+
+    
+  
   </div>
 </template>
 <script>
@@ -138,7 +109,7 @@ import session from "../lib/session";
 import api from "../lib/api";
 
 export default {
-  components: { Nav, Tweet, Profilecard },
+  components: { Nav, Tweet, Profilecard,},
   data() {
     return {
       visible: false,
@@ -153,19 +124,15 @@ export default {
       imageSrc: ""
     };
   },
-  mounted() {
+  created() {
     this.his = session.uinfo();
 
     this.read_user();
 
     if (session.logged_in()) {
-      this.read_followed()
-        .then(r => this.read_timeline())
-        .then(() => {
-          this.readOldValue();
-        });
+      this.read_followed().then(r => this.read_timeline());
     } else {
-      // this.read_timeline_public();
+      this.read_timeline_public();
     }
   },
   methods: {
@@ -173,10 +140,15 @@ export default {
       console.log(1);
       this.form.user_id = this.his.id;
       this.form.picture = this.imageSrc;
-      console.log(this.his.id);
+      this.form.timer=new Date().toLocaleTimeString();
+     
+      
+      
+      //console.log(this.his.id);
 
       api("tweet/create", this.form).then(r => {
         (this.form = {}), this.list.push(r.data);
+        this.form.picture=[];
         this.read_timeline();
       });
     },
@@ -204,13 +176,19 @@ export default {
           ]
         ],
         with: "belongs_to:user"
-      }).then(r => {
+      })
+        .then(r => {
+          this.timeline =  r.data;
+        });
+    },
+    read_timeline_public() {//未登录时读取
+      api("tweet/read", { with: "belongs_to:user" }).then(r => {
         this.timeline = r.data;
-        // console.log(r.data);
+        console.log(r.data);
       });
     },
 
-    pluck(arr, key) {
+    pluck(arr, key) {//筛选
       const result = [];
       if (arr == null) return result;
       arr.forEach(it => {
@@ -220,24 +198,14 @@ export default {
       return result;
     },
 
-    read_user() {
+    read_user() {//读取用户
       api("user/read", { where: [["id", "!=", "his.id"]] }).then(r => {
         this.user_list = r.data;
       });
     },
 
-    readOldValue(list) {
-      this.timeline.forEach(item => {
-        if (item.tweet_form) {
-          api("tweet/find", { id: item.tweet_form }).then(
-            r => (item.oldvalue = r.data.content)
-          );
-        }
-      });
-      console.log(this.timeline);
-    },
 
-    follow(user) {
+    follow(user) {//关注
       api("user/bind", {
         model: "user",
         glue: {
@@ -248,7 +216,7 @@ export default {
         this.read_followed();
       });
     },
-    unfollow(user) {
+    unfollow(user) {//取消关注
       api("user/unbind", {
         model: "user",
         glue: {
@@ -258,14 +226,16 @@ export default {
         this.read_followed();
       });
     },
-    has_followed(target_id) {
+    has_followed(target_id) {//已经被关注
       if (!this.followed_list) return false;
 
       return !!this.followed_list.find(user => {
         return user.id == target_id;
       });
     },
-    upload() {
+
+
+    upload() {//上传图片
       const uploader = document.getElementById("uploader");
 
       let file = uploader.files[0];
@@ -277,6 +247,7 @@ export default {
         let data = r.data;
         console.log(r.data);
         this.imageSrc = "http://" + data._base_url + "/" + data._key;
+        uploader={};
       });
     }
   }
@@ -284,6 +255,8 @@ export default {
 </script>
 
 <style scoped>
+
+
 .icon {
   position: relative;
 }
@@ -294,7 +267,12 @@ export default {
 
 .container {
   max-width: 1100px;
+
 }
+
+
+
+
 </style>
 
 

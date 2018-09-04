@@ -113,6 +113,6 @@ img {
   border-radius: 50%;
 }
 .title {
-  margin-top: 30px;
+  margin-top: 20px;
 }
 </style>
